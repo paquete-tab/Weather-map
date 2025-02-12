@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/html:/usr/share/nginx/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./docker/frontend/Dockerfile
+    container_name: frontend
+    tty: true
+    ports:
+      - "3000:3000"
+    command: npm start
+
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/api/Dockerfile
+    container_name: api
+    tty: true
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./weather_map/weather_map_backend:/backend
+    command: python3 /backend/GetWeather.py
+    env_file:
+      - .env
+
