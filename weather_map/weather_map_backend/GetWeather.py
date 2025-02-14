@@ -38,12 +38,32 @@ def get_city_data(lat, lon):
     data = response.json()
     return data
 
-def insert_weather_data(db_config, date, city, weather_data):
+def create_weather_database_and_table(db_config, db_name, table_name):
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor(buffered=True)
     
-    insert_query = """
-    INSERT INTO weather (date, city, weather_data)
+    create_database_query = f"""
+    CREATE DATABASE IF NOT EXISTS `{db_name}`
+    """
+        
+    cursor.execute(create_database_query)
+
+    create_table_query = f"""
+    CREATE TABLE IF NOT EXISTS `{table_name}` (date datetime, city varchar(100), weather_data varchar(20))
+    """
+        
+    cursor.execute(create_table_query)
+    
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+def insert_weather_data(db_config, table_name, date, city, weather_data):
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor(buffered=True)
+    
+    insert_query = f"""
+    INSERT INTO `{table_name}` (date, city, weather_data)
     VALUES (%s, %s, %s)
     """
         
@@ -53,12 +73,12 @@ def insert_weather_data(db_config, date, city, weather_data):
     cursor.close()
     connection.close()
 
-def search_weather_data(db_config, date, city):
+def search_weather_data(db_config, table_name, date, city):
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor(buffered=True)
     
-    search_query = """
-    SELECT weather_data FROM weather WHERE date=%s AND city=%s
+    search_query = f"""
+    SELECT weather_data FROM `{table_name}` WHERE date=%s AND city=%s
     """
         
     cursor.execute(search_query, (date, city))
@@ -83,27 +103,35 @@ def index():
     day = params.get("day", 12)
     date = datetime.date(year, month, day)
 
+    db_host = os.environ['DB_HOST']
+    db_port = os.environ['DB_PORT']
+    db_user = os.environ['DB_USER']
+    db_password = os.environ['DB_PASSWORD']
+    db_database = os.environ['DB_DATABASE']
+    weather_table_name = "weather"
     db_config = {
-        'user': 'weather_map',
-        'host': 'localhost',
-        'database': 'weather_map'
+        'host': db_host,
+        'port': db_port,
+        'user': db_user,
+        'password': db_password,
+        'database': db_database
     }
 
     # 地名情報を取得
     city_data = get_city_data(lat, lon)
     city_name = city_data["display_name"]
     print(city_name)
+
     # 天気情報を取得
-    weather_data = get_weather(api_key, lat, lon)
-    weather = weather_data["weather"][0]["description"]
-    # search_result = search_weather_data(db_config, date, city_name)
-    # print(search_result)
-    # if search_result == None:
-    #     weather_data = get_weather(api_key, lat, lon)
-    #     weather = weather_data["weather"][0]["description"]
-    #     insert_weather_data(db_config, date, city_name, weather)
-    # else:
-    #     weather = search_result[0]
+    create_weather_database_and_table(db_config, db_database, weather_table_name)
+    search_result = search_weather_data(db_config, weather_table_name, date, city_name)
+    print(search_result)
+    if search_result == None:
+        weather_data = get_weather(api_key, lat, lon)
+        weather = weather_data["weather"][0]["description"]
+        insert_weather_data(db_config, weather_table_name, date, city_name, weather)
+    else:
+        weather = search_result[0]
 
     # print(weather)
     return jsonify({"city": city_name, "weather": weather})
