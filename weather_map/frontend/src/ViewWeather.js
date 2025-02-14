@@ -14,7 +14,7 @@ function ViewWeather({lat, lon, date}) {
         month: date.getMonth()+1,
         day: date.getDate()
       }
-      axios.post(`http://ec2-54-183-158-158.us-west-1.compute.amazonaws.com/api/`, params)
+      axios.post(`${process.env.REACT_APP_API_ENDPOINT}`, params)
         .then(response => {
           setData(response.data);
         })
