@@ -11,8 +11,6 @@ services:
     volumes:
       - ./docker/nginx/html:/usr/share/nginx/html
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
-    networks:
-      - weather-map
 
   frontend:
     build:
@@ -25,8 +23,6 @@ services:
     command: npm start
     env_file:
       - .env
-    networks:
-      - weather-map
 
   api:
     build:
@@ -39,24 +35,16 @@ services:
     volumes:
       - ./weather_map/weather_map_backend:/backend
     command: python3 /backend/GetWeather.py
-    depends_on:
-      - db
     env_file:
       - .env
-    networks:
-      - weather-map
 
-  db:
-    image: mysql:8.0
-    container_name: db
-    tty: true
-    ports:
-      - "3306:3306"
-    env_file:
-      - .env
-    networks:
-      - weather-map
-
-networks:
-  weather-map:
-    driver: bridge
+#   db:
+#     image: mysql:8.0
+#     container_name: db
+#     tty: true
+#     ports:
+#       - "3306:3306"
+#     env_file:
+#       - .env
+#     networks:
+#       - weather-map
