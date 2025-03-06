@@ -13,18 +13,6 @@ services:
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
       - ./docker/nginx/ssl:/etc/nginx/ssl
 
-  frontend:
-    build:
-      context: .
-      dockerfile: ./docker/frontend/Dockerfile
-    container_name: frontend
-    tty: true
-    ports:
-      - "3000:3000"
-    command: npm start
-    env_file:
-      - .env
-
   api:
     build:
       context: .
