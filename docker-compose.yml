@@ -11,18 +11,7 @@ services:
     volumes:
       - ./docker/nginx/html:/usr/share/nginx/html
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
-
-  frontend:
-    build:
-      context: .
-      dockerfile: ./docker/frontend/Dockerfile
-    container_name: frontend
-    tty: true
-    ports:
-      - "3000:3000"
-    command: npm start
-    env_file:
-      - .env
+      - ./docker/nginx/ssl:/etc/nginx/ssl
 
   api:
     build:
@@ -37,14 +26,3 @@ services:
     command: python3 /backend/GetWeather.py
     env_file:
       - .env
-
-#   db:
-#     image: mysql:8.0
-#     container_name: db
-#     tty: true
-#     ports:
-#       - "3306:3306"
-#     env_file:
-#       - .env
-#     networks:
-#       - weather-map
